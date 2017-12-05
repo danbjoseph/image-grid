@@ -1,0 +1,24 @@
+{
+  "name": "image-grid",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danbjoseph/image-grid.git"
+  },
+  "author": "danbjoseph",
+  "license": "",
+  "bugs": {
+    "url": "https://github.com/danbjoseph/image-grid/issues"
+  },
+  "homepage": "https://github.com/danbjoseph/image-grid#readme",
+  "dependencies": {
+    "@turf/turf": "^5.0.4",
+    "exif-parser": "^0.1.12",
+    "moment": "^2.19.3"
+  }
+}
