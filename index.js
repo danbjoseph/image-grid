@@ -4,13 +4,14 @@ var fs = require('fs');
 var path = require('path');
 
 var geo = JSON.parse(fs.readFileSync("aois.geojson"));
+// TODO: filter out non jpg files, system files
 var aois = geo.features;
-var imgDir = "./images"
+var imgDir = "./images";
 var images = fs.readdirSync(imgDir);
 
-var deleteOriginals = true;
+var deleteOriginals = false;
 
-function placeImage(image, cb){
+function placeImage(image, cb) {
     var readStream = fs.createReadStream(path.join(imgDir, image), { start: 0, end: 65635 });
     // The exif section of a jpeg file has a maximum size of 65535 
     // bytes and the section seems to always occur within the first 
@@ -24,6 +25,7 @@ function placeImage(image, cb){
           var buf = Buffer.concat(bufs)
           var parser = require('exif-parser').create(buf);
           var tags = parser.parse().tags;
+          // TODO: run a check to make sure image has valid GPS?
           var pt = turf.point([tags.GPSLongitude,tags.GPSLatitude]);
           var count = 0;
           for (var i = 0; i < aois.length; i++) {
@@ -44,25 +46,42 @@ function placeImage(image, cb){
       });
 }
 
+function copyInImages(imgArray, destPath, cb) {
+  var copyCount = 0;
+  for (var i = 0; i < imgArray.length; i++) {
+    var src = path.join(imgDir, imgArray[i]);
+    var dest = path.join(destPath, imgArray[i]);
+    fs.copyFile(src, dest, function(err) {
+      if (err) throw err;
+      copyCount++;
+      if (copyCount == imgArray.length) {
+        cb();
+      }
+    });
+  }
+}
+
 function createOutput() {
   var timestamp = moment().format("YYYY-MM-DD_HH-mm-ss");
-  fs.mkdirSync(path.join('output',timestamp))
+  fs.mkdirSync(path.join('output',timestamp));
   // TODO: write full FeatureCollection
   var count = 0;
   for (var i = 0; i < aois.length; i++) {
     var indexValue = i;
-    fs.mkdirSync(path.join('output',timestamp,indexValue.toString()))
+    var destPath = path.join('output',timestamp,indexValue.toString());
+    fs.mkdirSync(destPath);
     // TODO: write FeatureCollection for just the one aoi
-    // TODO: copy in all images
-    count++;
-    if (count == aois.length) {
-      if (deleteOriginals) {
-        // TODO: delete all original images
-        console.log("done.");
-      } else {
-        console.log("done.")
+    copyInImages(aois[i].properties.images, destPath, function() {
+      count++;
+      if (count == aois.length) {
+        if (deleteOriginals) {
+          // TODO: delete all original images
+          console.log("done.");
+        } else {
+          console.log("done.");
+        }
       }
-    }
+    })    
   }  
 }
 
